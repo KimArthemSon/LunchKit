@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+
+# Secrets: copy server/.env.example to server/.env and fill it in
+.env
+.env.*
+!.env.example
+
+# User uploads (product files and preview images); demo data is recreated by `npm run seed`
+server/uploads/
+
+# Logs and editor files
+*.log
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea/

@@ -1,0 +1,37 @@
+
+
+
+/* Global alert/toast entrance (see context/AlertContext.tsx) */
+@keyframes alert-toast-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.alert-toast-in { animation: alert-toast-in 0.2s ease-out; }
+
+/* Keep Chrome autofill from painting auth inputs light blue */
+.auth-input:-webkit-autofill,
+.auth-input:-webkit-autofill:hover,
+.auth-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #1c1917;
+  -webkit-box-shadow: 0 0 0 1000px #fff inset;
+  caret-color: #1c1917;
+  transition: background-color 9999s ease-out 0s;
+}
+
+/* ─── Landing page motion (kept deliberately quiet) ─── */
+@keyframes lk-draw { to { stroke-dashoffset: 0; } }
+
+/* Scroll-revealed line that grows from the left (pairs with .sr / .sr-on) */
+.sr.lk-line { opacity: 1; transform: scaleX(0); transform-origin: left; transition: transform 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.3s; }
+
+/* Chart line that draws itself once revealed */
+.lk-draw { stroke-dasharray: 600; stroke-dashoffset: 600; }
+.sr-on .lk-draw { animation: lk-draw 2s ease-out 0.4s forwards; }
+
+html { scroll-behavior: smooth; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lk-draw { stroke-dashoffset: 0; animation: none !important; }
+  .sr, .sr.lk-line { opacity: 1 !important; transform: none !important; translate: none !important; scale: none !important; transition: none !important; }
+  html { scroll-behavior: auto !important; }
+}

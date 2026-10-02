@@ -1,0 +1,59 @@
+LAUNCHKIT — DEMO ACCOUNTS (local development only)
+===================================================
+
+Password for every account:  demo1234
+Login page:                  http://localhost:5173/login  (use the "Password" tab)
+
+These accounts are created by the seed script. Recreate or remove them with:
+  cd server
+  npm run seed              -> reset demo data to a fresh copy
+  npm run seed -- --clear   -> remove all demo data (your real data is kept)
+
+
+SELLERS  (open the seller dashboard: Dashboard, Products, Orders, Earnings)
+---------------------------------------------------------------------------------------
+Email                          Password    Name                 Products  Payout method   Good for testing
+pixelforge@launchkit.demo      demo1234    Pixel Forge Studio   8         GCash           Sales every month, has a draft product
+deckwright@launchkit.demo      demo1234    Deckwright           8         Bank (BDO)      Payout already in progress, archived product
+motionlab@launchkit.demo       demo1234    Motion Lab PH        6         PayPal          Smaller store, has a draft product
+launchpad@launchkit.demo       demo1234    Launchpad Assets     8         GCash           Never withdrawn, so "Request Payout" works
+
+
+CUSTOMERS  (open the storefront: browse, cart, checkout, My Orders, Downloads)
+------------------------------------------------------------------------------------------
+Email                                Password    Name                 Orders  Cart
+juan.dela.cruz@launchkit.demo        demo1234    Juan Dela Cruz       8       2 items, ready for checkout
+maria.santos@launchkit.demo          demo1234    Maria Santos         12      2 items, ready for checkout
+carlo.reyes@launchkit.demo           demo1234    Carlo Reyes          15      2 items, ready for checkout
+angelica.bautista@launchkit.demo     demo1234    Angelica Bautista    5       2 items, ready for checkout
+aisha.rahman@launchkit.demo          demo1234    Aisha Rahman         7       empty
+diego.fernandez@launchkit.demo       demo1234    Diego Fernandez      8       empty
+ethan.nguyen@launchkit.demo          demo1234    Ethan Nguyen         10      empty
+hannah.kim@launchkit.demo            demo1234    Hannah Kim           13      empty
+isabella.rossi@launchkit.demo        demo1234    Isabella Rossi       11      empty
+kristine.mendoza@launchkit.demo      demo1234    Kristine Mendoza     5       empty
+liam.chen@launchkit.demo             demo1234    Liam Chen            7       empty
+miguel.torres@launchkit.demo         demo1234    Miguel Torres        12      empty
+noah.patel@launchkit.demo            demo1234    Noah Patel           12      empty
+paolo.garcia@launchkit.demo          demo1234    Paolo Garcia         12      empty
+sophia.lim@launchkit.demo            demo1234    Sophia Lim           13      empty
+
+
+TEST CARDS  (checkout runs in test mode — no real money is charged)
+-------------------------------------------------------------------
+Card number            Result
+4242 4242 4242 4242    Payment succeeds
+4000 0000 0000 0002    Card declined
+4000 0000 0000 9995    Insufficient funds
+Use any future expiry date (e.g. 12 / 34) and any 3-digit security code (e.g. 123).
+
+
+NOTES
+-----
+- Earnings stay "pending" for 7 days after each sale before sellers can withdraw them.
+  To test payouts on new sales right away, set EARNINGS_HOLD_DAYS=0 in server/.env.
+- The minimum payout is $10.00.
+- Seller and customer areas are separate: a seller account cannot open customer
+  pages, and a customer account cannot open seller pages.
+- Order counts and carts change as you use the accounts. Running "npm run seed"
+  puts everything back to the starting state above.
