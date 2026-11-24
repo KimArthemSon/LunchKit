@@ -132,6 +132,15 @@ npm run dev    # app runs at http://localhost:5173
 
 The client calls `http://localhost:5000` by default. To point it at another API, set `VITE_API_URL` in `client/.env.local`.
 
+## Deploying only the frontend (preview mode)
+
+The `client` folder can be deployed on its own (for example to Vercel, with **Root Directory** set to `client`) to show the website without a backend. A production build with no `VITE_API_URL` runs in **preview mode**:
+
+- sign-in, sign-up and Google sign-in are switched off, and the sign-in pages explain why
+- the app makes no API calls, so visitors are never sent to a `localhost` address
+
+`client/vercel.json` sends every route to `index.html`, so links like `/login` also work when the page is refreshed. Once a backend is deployed, set `VITE_API_URL` to its URL in the Vercel project's environment variables to turn preview mode off. You can also force it with `VITE_PREVIEW_MODE=true` or `false`.
+
 ## Demo accounts
 
 After `npm run seed`, every demo account uses the password **`demo1234`**. Sign in on the **Password** tab.

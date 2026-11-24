@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useAlert } from "../context/AlertContext";
 import { I } from "../components/Shared";
+import { apiRequest, errorMessage } from "../api/http";
+import type { User } from "../context/AuthContext";
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -15,25 +17,18 @@ export default function Onboarding() {
     
     setIsLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/auth/complete-onboarding", {
+      const data = await apiRequest<User & { token: string }>("/api/auth/complete-onboarding", token, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
         body: JSON.stringify({ role }),
       });
-      
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
 
       // Update auth context with final user data
       login(data, data.token);
       
       // Redirect to correct dashboard
       navigate(role === "seller" ? "/seller/dashboard" : "/dashboard", { replace: true });
-    } catch (err: any) {
-      alert.error(err.message);
+    } catch (err) {
+      alert.error(errorMessage(err));
     } finally {
       setIsLoading(false);
     }

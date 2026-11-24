@@ -3,10 +3,10 @@ import type { FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { I, useScrollReveal } from "../components/Shared";
 import { useAuth, type User } from "../context/AuthContext";
-import { API_URL, apiRequest, errorMessage } from "../api/http";
+import { API_URL, PREVIEW_MODE, apiRequest, errorMessage } from "../api/http";
 import { postLoginPath } from "../utils/authRoutes";
 import {
-  AuthShell, ErrorBanner, Field, LockIcon, MailIcon, OrDivider, PasswordToggle, SocialButtons, Spinner, inputBase, linkClass, primaryButton,
+  AuthShell, ErrorBanner, Field, LockIcon, MailIcon, OrDivider, PasswordToggle, PreviewNotice, SocialButtons, Spinner, inputBase, linkClass, primaryButton,
 } from "../components/AuthUI";
 
 type Role = "customer" | "seller";
@@ -106,12 +106,18 @@ export default function SignupPage() {
         </p>
       </div>
 
-      <SocialButtons onGoogle={() => { window.location.href = `${API_URL}/api/auth/google`; }} />
+      {PREVIEW_MODE && <PreviewNotice />}
+
+      <SocialButtons
+        onGoogle={() => { if (!PREVIEW_MODE) window.location.href = `${API_URL}/api/auth/google`; }}
+        disabled={PREVIEW_MODE}
+      />
       <OrDivider label="or sign up with email" />
 
       {error && <ErrorBanner message={error} />}
 
       <form onSubmit={handleSignup} className="space-y-5">
+        <fieldset disabled={PREVIEW_MODE} className="space-y-5 disabled:opacity-60">
         {/* Role picker */}
         <fieldset>
           <legend className="text-sm font-medium text-stone-800 mb-2">I want to</legend>
@@ -264,6 +270,7 @@ export default function SignupPage() {
             </>
           )}
         </button>
+        </fieldset>
       </form>
     </AuthShell>
   );

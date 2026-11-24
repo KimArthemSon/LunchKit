@@ -3,10 +3,10 @@ import type { FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { I, useScrollReveal } from "../components/Shared";
 import { useAuth, type User } from "../context/AuthContext";
-import { API_URL, apiRequest, errorMessage } from "../api/http";
+import { API_URL, PREVIEW_MODE, apiRequest, errorMessage } from "../api/http";
 import { postLoginPath } from "../utils/authRoutes";
 import {
-  AuthShell, ErrorBanner, Field, KeyIcon, LockIcon, MailIcon, OrDivider, PasswordToggle, SocialButtons, Spinner, inputBase, linkClass, primaryButton,
+  AuthShell, ErrorBanner, Field, KeyIcon, LockIcon, MailIcon, OrDivider, PasswordToggle, PreviewNotice, SocialButtons, Spinner, inputBase, linkClass, primaryButton,
 } from "../components/AuthUI";
 
 const POINTS = [
@@ -93,6 +93,7 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = () => {
+    if (PREVIEW_MODE) return;
     window.location.href = `${API_URL}/api/auth/google`;
   };
 
@@ -119,7 +120,9 @@ export default function LoginPage() {
         </p>
       </div>
 
-      <SocialButtons onGoogle={handleGoogleLogin} />
+      {PREVIEW_MODE && <PreviewNotice />}
+
+      <SocialButtons onGoogle={handleGoogleLogin} disabled={PREVIEW_MODE} />
       <OrDivider label="or with email" />
 
       {/* Method Toggle */}
@@ -138,6 +141,7 @@ export default function LoginPage() {
         onSubmit={method === "password" ? handlePasswordLogin : isOtpSent ? handleVerifyOtp : handleRequestOtp}
         className="space-y-5"
       >
+        <fieldset disabled={PREVIEW_MODE} className="space-y-5 disabled:opacity-60">
         {/* Email: replaced by a summary chip once a code is sent */}
         {method === "otp" && isOtpSent ? (
           <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-stone-50 border border-stone-200">
@@ -238,6 +242,7 @@ export default function LoginPage() {
             </>
           )}
         </button>
+        </fieldset>
       </form>
 
       <p className="mt-8 text-center text-xs text-stone-500 leading-relaxed">
