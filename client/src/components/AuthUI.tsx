@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Reveal, I } from "./Shared";
+import { PREVIEW_MESSAGE } from "../api/http";
 
 /* ─── Local icons (not in the shared set) ── */
 const svg = (size: number, children: ReactNode) => (
@@ -54,13 +55,15 @@ export function PasswordToggle({ shown, onToggle }: { shown: boolean; onToggle: 
   );
 }
 
-export function SocialButtons({ onGoogle }: { onGoogle: () => void }) {
+export function SocialButtons({ onGoogle, disabled = false }: { onGoogle: () => void; disabled?: boolean }) {
   return (
     <div className="grid grid-cols-2 gap-3">
       <button
         type="button"
         onClick={onGoogle}
-        className="flex items-center justify-center gap-2.5 py-3 bg-white border border-stone-300 rounded-full text-stone-900 font-medium text-sm hover:border-stone-900 transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-stone-900/10"
+        disabled={disabled}
+        title={disabled ? "Sign-in is turned off in this preview" : undefined}
+        className="flex items-center justify-center gap-2.5 py-3 bg-white border border-stone-300 rounded-full text-stone-900 font-medium text-sm hover:border-stone-900 transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-stone-900/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-stone-300"
       >
         <GoogleLogo /> Google
       </button>
@@ -82,6 +85,19 @@ export function OrDivider({ label }: { label: string }) {
       <div className="h-px flex-1 bg-stone-200" />
       <span className="text-xs text-stone-500">{label}</span>
       <div className="h-px flex-1 bg-stone-200" />
+    </div>
+  );
+}
+
+// Shown on the sign-in pages of a frontend-only deploy, where there's no backend to sign in to
+export function PreviewNotice() {
+  return (
+    <div role="note" className="flex items-start gap-3 p-4 mb-6 bg-amber-50 border border-amber-200 rounded-xl text-sm">
+      <I name="Info" size={18} className="shrink-0 mt-0.5 text-amber-700" />
+      <div>
+        <p className="font-medium text-amber-900">Preview only</p>
+        <p className="text-amber-800 mt-0.5 leading-relaxed">{PREVIEW_MESSAGE}</p>
+      </div>
     </div>
   );
 }
