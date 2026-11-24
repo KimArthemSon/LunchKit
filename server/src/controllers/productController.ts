@@ -7,6 +7,18 @@ import {
   PRODUCT_FILES_DIR, PREVIEW_DIR, PREVIEW_PUBLIC_PATH, MAX_PREVIEW_SIZE,
 } from "../middleware/uploadMiddleware";
 import { hasAnySales, hasPurchased } from "../services/ownership";
+import Cart from "../models/Cart";
+import { emitToUsers } from "../realtime/socket";
+
+// Realtime: carts holding this product may now show a new price or need the item removed
+const notifyCartHolders = async (productId: mongoose.Types.ObjectId) => {
+  try {
+    const userIds = await Cart.distinct("userId", { "items.productId": productId });
+    emitToUsers(userIds, "product:updated", { productId: String(productId) });
+  } catch (error) {
+    console.error("Realtime product notify failed", error);
+  }
+};
 
 // Fields a seller can set from the form. File fields are derived from the upload,
 // and sellerId / downloadsCount are server-controlled.
@@ -221,6 +233,7 @@ export const updateProduct = async (req: any, res: Response) => {
     // Only delete the old files once the new ones are safely saved
     if (file) removeFile(productFilePath(oldFileUrl));
     if (preview && oldPreviewUrl) removeFile(previewFilePath(oldPreviewUrl));
+    void notifyCartHolders(product._id);
 
     res.json(await Product.findById(product._id));
   } catch (error) {
@@ -248,6 +261,7 @@ export const deleteProduct = async (req: any, res: Response) => {
     }
 
     await product.deleteOne();
+    void notifyCartHolders(product._id);
 
     removeFile(productFilePath(product.fileUrl));
     if (product.previewImageUrl) removeFile(previewFilePath(product.previewImageUrl));

@@ -1,3 +1,4 @@
+import http from "http";
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -10,6 +11,7 @@ import cartRoutes from "./routes/cartRoutes";
 import orderRoutes from "./routes/orderRoutes";
 import sellerRoutes from "./routes/sellerRoutes";
 import { PREVIEW_DIR, PREVIEW_PUBLIC_PATH } from "./middleware/uploadMiddleware";
+import { initSocket } from "./realtime/socket";
 
 dotenv.config();
 connectDB();
@@ -36,4 +38,7 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/seller", sellerRoutes);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Socket.IO shares the HTTP server (and port) with Express
+const server = http.createServer(app);
+initSocket(server);
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

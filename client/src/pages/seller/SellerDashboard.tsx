@@ -7,6 +7,7 @@ import SalesChart from "../../components/seller/SalesChart";
 import { I } from "../../components/Shared";
 import { useAuth } from "../../context/AuthContext";
 import { useAsync } from "../../hooks/useAsync";
+import { useRealtimeRefresh } from "../../hooks/useSocketEvent";
 import { getOverview, OVERVIEW_RANGES, type Overview, type OverviewRange } from "../../api/seller";
 import { assetUrl } from "../../api/products";
 import { formatDate, formatMoney } from "../../utils/money";
@@ -23,7 +24,8 @@ export default function SellerDashboard() {
   const { token, user } = useAuth();
   const [range, setRange] = useState<OverviewRange>("30d");
   const load = useCallback(() => getOverview(token!, range), [token, range]);
-  const { data, isLoading, error, reload } = useAsync(token ? `overview:${range}` : null, load);
+  const { data, isLoading, error, reload, refresh } = useAsync(token ? `overview:${range}` : null, load);
+  useRealtimeRefresh(["sale:new"], refresh);
 
   // Refetch keeps the frame: hold the last result (dimmed) while a new range loads
   const [shown, setShown] = useState<Overview | null>(null);

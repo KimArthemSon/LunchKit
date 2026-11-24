@@ -5,13 +5,15 @@ import { I } from "../../components/Shared";
 import Breadcrumbs from "../../components/customer/Breadcrumbs";
 import { useAuth } from "../../context/AuthContext";
 import { useAsync } from "../../hooks/useAsync";
+import { useRealtimeRefresh } from "../../hooks/useSocketEvent";
 import { getMyOrders } from "../../api/orders";
 import { formatDate, formatMoney } from "../../utils/money";
 
 export default function Orders() {
   const { token } = useAuth();
   const load = useCallback(() => getMyOrders(token!), [token]);
-  const { data: orders, isLoading, error, reload } = useAsync(token ? "orders" : null, load);
+  const { data: orders, isLoading, error, reload, refresh } = useAsync(token ? "orders" : null, load);
+  useRealtimeRefresh(["order:paid"], refresh);
 
   return (
     <DashboardLayout>

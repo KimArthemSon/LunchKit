@@ -4,6 +4,7 @@ import Order from "../models/Order";
 import Payout from "../models/Payout";
 import User from "../models/User";
 import { nextSequence, formatDocNumber } from "../models/Counter";
+import { emitToUser } from "../realtime/socket";
 import { CURRENCY, getEarningsHoldDays, getMinPayoutCents, getPlatformFeeRate } from "../utils/pricing";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -289,6 +290,8 @@ export const requestPayout = async (req: any, res: Response) => {
     });
 
     console.log(`\n💸 [MVP Payout] ${payout.payoutNumber} | $${(requested / 100).toFixed(2)} → ${method} ${maskAccount(user.payoutAccount)?.accountNumberMasked} (awaiting processing)\n`);
+
+    emitToUser(sellerId, "payout:updated", { payoutNumber: payout.payoutNumber, status: payout.status });
 
     res.status(201).json({
       payoutNumber: payout.payoutNumber,

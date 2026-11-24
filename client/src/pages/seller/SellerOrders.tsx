@@ -5,6 +5,7 @@ import SellerHeader from "../../components/seller/SellerHeader";
 import { I } from "../../components/Shared";
 import { useAuth } from "../../context/AuthContext";
 import { useAsync } from "../../hooks/useAsync";
+import { useRealtimeRefresh } from "../../hooks/useSocketEvent";
 import { getSales, type SaleStatus } from "../../api/seller";
 import { formatDateTime, formatMoney } from "../../utils/money";
 
@@ -21,7 +22,8 @@ export default function SellerOrders() {
     () => getSales(token!, { search, status: status === "all" ? undefined : status, page, limit: PAGE_SIZE }),
     [token, search, status, page]
   );
-  const { data, isLoading, error, reload } = useAsync(token ? `sales:${search}:${status}:${page}` : null, load);
+  const { data, isLoading, error, reload, refresh } = useAsync(token ? `sales:${search}:${status}:${page}` : null, load);
+  useRealtimeRefresh(["sale:new"], refresh);
   const currency = data?.summary.currency ?? "USD";
 
   const applySearch = (e: FormEvent) => {

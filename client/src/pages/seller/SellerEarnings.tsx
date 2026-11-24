@@ -6,6 +6,7 @@ import { I } from "../../components/Shared";
 import { useAuth } from "../../context/AuthContext";
 import { useAlert } from "../../context/AlertContext";
 import { useAsync } from "../../hooks/useAsync";
+import { useRealtimeRefresh } from "../../hooks/useSocketEvent";
 import { errorMessage } from "../../api/http";
 import {
   getEarnings, requestPayout, updatePayoutAccount, PAYOUT_METHOD_LABELS,
@@ -26,7 +27,8 @@ export default function SellerEarnings() {
   const { token } = useAuth();
   const alert = useAlert();
   const load = useCallback(() => getEarnings(token!), [token]);
-  const { data, isLoading, error, reload } = useAsync(token ? "earnings" : null, load);
+  const { data, isLoading, error, reload, refresh } = useAsync(token ? "earnings" : null, load);
+  useRealtimeRefresh(["sale:new", "payout:updated"], refresh);
   const [modal, setModal] = useState<"account" | "payout" | null>(null);
 
   const currency = data?.balance.currency ?? "USD";

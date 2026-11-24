@@ -6,6 +6,7 @@ import { I } from "../../components/Shared";
 import Breadcrumbs from "../../components/customer/Breadcrumbs";
 import { useAuth } from "../../context/AuthContext";
 import { useAsync } from "../../hooks/useAsync";
+import { useRealtimeRefresh } from "../../hooks/useSocketEvent";
 import { getLibrary } from "../../api/orders";
 import { assetUrl, formatFileSize } from "../../api/products";
 import { formatDate } from "../../utils/money";
@@ -13,7 +14,8 @@ import { formatDate } from "../../utils/money";
 export default function Library() {
   const { token } = useAuth();
   const load = useCallback(() => getLibrary(token!), [token]);
-  const { data: items, isLoading, error, reload } = useAsync(token ? "library" : null, load);
+  const { data: items, isLoading, error, reload, refresh } = useAsync(token ? "library" : null, load);
+  useRealtimeRefresh(["order:paid"], refresh);
 
   return (
     <DashboardLayout>

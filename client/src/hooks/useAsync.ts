@@ -20,10 +20,20 @@ export function useAsync<T>(key: string | null, fn: () => Promise<T>) {
   const current = result && result.key === requestKey ? result : null;
   const reload = useCallback(() => setReloadCount((c) => c + 1), []);
 
+  // Background refetch (e.g. on a realtime event): keeps showing the current data instead of
+  // a loading state, and keeps it if the refetch fails.
+  const refresh = useCallback(() => {
+    if (requestKey === null) return;
+    fn()
+      .then((data) => setResult((prev) => (prev?.key === requestKey ? { key: requestKey, data, error: "" } : prev)))
+      .catch(() => {});
+  }, [requestKey, fn]);
+
   return {
     data: current?.data ?? null,
     error: current?.error ?? "",
     isLoading: requestKey !== null && !current,
     reload,
+    refresh,
   };
 }

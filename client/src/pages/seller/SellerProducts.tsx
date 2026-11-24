@@ -7,6 +7,7 @@ import StatusSelect from "../../components/seller/StatusSelect";
 import { I } from "../../components/Shared";
 import { useAuth } from "../../context/AuthContext";
 import { useAlert } from "../../context/AlertContext";
+import { useRealtimeRefresh } from "../../hooks/useSocketEvent";
 import {
   getMyProducts, createProduct, updateProduct, deleteProduct, assetUrl,
   PRODUCT_STATUSES, type Product, type ProductInput, type ProductStatus,
@@ -52,6 +53,12 @@ export default function SellerProducts() {
   useEffect(() => {
     loadProducts();
   }, [loadProducts]);
+
+  // Realtime: a sale bumps download counts → refetch quietly, without the loading state
+  const syncProducts = useCallback(() => {
+    getMyProducts(token).then(setProducts).catch(() => {});
+  }, [token]);
+  useRealtimeRefresh(["sale:new"], syncProducts);
 
   const visibleProducts = useMemo(() => {
     const q = search.trim().toLowerCase();
