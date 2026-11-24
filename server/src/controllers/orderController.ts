@@ -8,6 +8,7 @@ import { buildCart } from "./cartController";
 import { splitRevenue, toCents } from "../utils/pricing";
 import { getPaymentProvider } from "../services/payments";
 import { sellerIdOf } from "../services/ownership";
+import { emitToUser } from "../realtime/socket";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -144,10 +145,31 @@ export const checkout = async (req: any, res: Response) => {
     Product.updateMany({ _id: { $in: productIds } }, { $inc: { downloadsCount: 1 } }),
   ]);
 
+  notifyOrderPaid(order);
+
   // No email service yet — log the receipt the same way OTPs are logged in development
   console.log(`\n🧾 [MVP Receipt] ${order.receiptNumber} → ${email} | ${order.items.length} item(s) | ${(order.totalCents / 100).toFixed(2)} ${order.currency}\n`);
 
   res.status(201).json(order);
+};
+
+// Realtime: tell each seller about their part of the sale, and sync the buyer's other tabs/devices
+const notifyOrderPaid = (order: InstanceType<typeof Order>) => {
+  const bySeller = new Map<string, { productId: string; title: string; earningsCents: number }[]>();
+  for (const item of order.items) {
+    const sellerId = String(item.sellerId);
+    const lines = bySeller.get(sellerId) ?? [];
+    lines.push({ productId: String(item.productId), title: item.title, earningsCents: item.sellerEarningsCents });
+    bySeller.set(sellerId, lines);
+  }
+  for (const [sellerId, items] of bySeller) {
+    emitToUser(sellerId, "sale:new", { orderNumber: order.orderNumber, currency: order.currency, items });
+  }
+  emitToUser(order.buyerId, "order:paid", {
+    orderId: String(order._id),
+    orderNumber: order.orderNumber,
+    productIds: order.items.map((i) => String(i.productId)),
+  });
 };
 
 // @desc    My order history (completed orders)

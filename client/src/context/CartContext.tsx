@@ -9,6 +9,7 @@ import { getLibrary } from "../api/orders";
 import { ApiError, errorMessage } from "../api/http";
 import { useAuth } from "./AuthContext";
 import { useAlert } from "./AlertContext";
+import { useRealtimeRefresh, useSocketEvent } from "../hooks/useSocketEvent";
 
 interface CartContextType {
   items: Product[];
@@ -127,6 +128,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return null;
     }
   }, [token, alert, applyCart]);
+
+  // Realtime: a product in the cart changed (price, archived, deleted) → reload the cart so
+  // its notices explain what changed. Silent on failure; checkout re-validates anyway.
+  const syncCart = useCallback(() => {
+    if (!token) return;
+    getCart(token).then(applyCart).catch(() => {});
+  }, [token, applyCart]);
+  useRealtimeRefresh(["product:updated"], syncCart);
+
+  // Realtime: an order was paid in another tab/device → mark owned and drop from the cart here
+  useSocketEvent("order:paid", ({ productIds }) => markPurchased(productIds));
 
   return (
     <CartContext.Provider

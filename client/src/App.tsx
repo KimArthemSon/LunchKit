@@ -3,6 +3,8 @@ import { Layout } from "./components/Shared";
 import { CartProvider } from "./context/CartContext";
 import { AuthProvider } from "./context/AuthContext";
 import { AlertProvider } from "./context/AlertContext";
+import { SocketProvider } from "./context/SocketContext";
+import RealtimeToasts from "./components/RealtimeToasts";
 import { GuestOnly, RequireAuth } from "./components/RouteGuards";
 
 // Public & Customer Pages
@@ -26,7 +28,9 @@ export default function App() {
   return (
     <AlertProvider>
     <AuthProvider>
+    <SocketProvider>
       <CartProvider>
+        <RealtimeToasts />
         <BrowserRouter>
           <Routes>
             {/* Public Routes */}
@@ -55,6 +59,7 @@ export default function App() {
           </Routes>
         </BrowserRouter>
       </CartProvider>
+    </SocketProvider>
     </AuthProvider>
     </AlertProvider>
   );
