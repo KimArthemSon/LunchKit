@@ -16,7 +16,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // @route   GET /api/orders/payment-config
 export const getPaymentConfig = (_req: any, res: Response) => {
   const provider = getPaymentProvider();
-  res.json({ provider: provider.name, testMode: provider.testMode });
+  res.json({ provider: provider.name, testMode: provider.testMode, publishableKey: provider.publishableKey });
 };
 
 // @desc    Pay for everything in my cart
@@ -112,7 +112,8 @@ export const checkout = async (req: any, res: Response) => {
         currency: summary.currency,
         paymentMethod,
         description: `LaunchKit order ${order.orderNumber}`,
-        idempotencyKey: order.orderNumber,
+        // The order's id is globally unique (order numbers restart when demo data is reseeded)
+        idempotencyKey: `order_${order._id}`,
         metadata: { orderId: String(order._id), buyerId: String(userId) },
       });
     } catch {

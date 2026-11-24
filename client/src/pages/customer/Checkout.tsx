@@ -5,6 +5,7 @@ import DashboardLayout from "../../components/customer/DashboardLayout";
 import BillSummary from "../../components/customer/BillSummary";
 import { I } from "../../components/Shared";
 import Breadcrumbs from "../../components/customer/Breadcrumbs";
+import StripeCardField, { type StripeCardHandle } from "../../components/customer/StripeCardField";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
 import { useAlert } from "../../context/AlertContext";
@@ -20,6 +21,14 @@ import {
 } from "../../utils/card";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Stripe's test cards: type them into the Stripe field (it can't be filled from our page)
+const STRIPE_TEST_CARDS = [
+  { number: "4242 4242 4242 4242", result: "succeeds" },
+  { number: "4000 0000 0000 0002", result: "declined" },
+  { number: "4000 0000 0000 9995", result: "insufficient funds" },
+  { number: "4000 0000 0000 0069", result: "expired card" },
+];
 
 const newAttemptKey = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -57,8 +66,10 @@ export default function Checkout() {
   const [isPaying, setIsPaying] = useState(false);
   // Same key for retries of the same attempt (network blips) so we never double-charge
   const attemptKey = useRef<string | null>(null);
+  const stripeCard = useRef<StripeCardHandle>(null);
 
   const isFree = summary.totalCents === 0;
+  const stripeKey = paymentConfig?.provider === "stripe" ? paymentConfig.publishableKey : undefined;
   const brand = detectBrand(card.number.replace(/\D/g, ""));
 
   const setCardField = (field: keyof CardInput, value: string) => {
@@ -81,7 +92,7 @@ export default function Checkout() {
     const bErrors: typeof billingErrors = {};
     if (!billing.name.trim()) bErrors.name = "Enter your full name";
     if (!EMAIL_RE.test(billing.email.trim())) bErrors.email = "Enter a valid email for your receipt";
-    const cErrors = isFree ? {} : validateCard(card);
+    const cErrors = isFree || stripeKey ? {} : validateCard(card); // Stripe validates its own field
     setBillingErrors(bErrors);
     setCardErrors(cErrors);
     if (Object.keys(bErrors).length || Object.keys(cErrors).length) {
@@ -96,11 +107,26 @@ export default function Checkout() {
     attemptKey.current ??= newAttemptKey();
     setIsPaying(true);
     try {
+      const billingDetails = { name: billing.name.trim(), email: billing.email.trim() };
+      let paymentMethod: string | undefined;
+      if (!isFree && stripeKey) {
+        // Stripe turns the card into a PaymentMethod in the browser; only its id reaches us
+        const result = await stripeCard.current?.createPaymentMethod(billingDetails);
+        if (!result || "error" in result) {
+          if (!result) setPaymentError("The payment form isn't ready yet.");
+          else if (!result.shownInField) setPaymentError(result.error);
+          return;
+        }
+        paymentMethod = result.id;
+      } else if (!isFree) {
+        paymentMethod = tokenizeCard(card);
+      }
+
       const order = await checkout(
         token,
         {
-          billing: { name: billing.name.trim(), email: billing.email.trim() },
-          paymentMethod: isFree ? undefined : tokenizeCard(card),
+          billing: billingDetails,
+          paymentMethod,
           expectedTotalCents: summary.totalCents,
         },
         attemptKey.current
@@ -181,7 +207,23 @@ export default function Checkout() {
 
           {!isFree && (
             <Card step={2} title="Payment">
-              {paymentConfig?.testMode && (
+              {paymentConfig?.testMode && stripeKey && (
+                <div className="mb-5 p-4 rounded-xl bg-amber-50 border border-amber-200 text-sm">
+                  <p className="font-bold text-amber-800 flex items-center gap-2">
+                    <I name="AlertTriangle" size={16} /> Stripe test mode — no real money is charged
+                  </p>
+                  <p className="text-amber-700 mt-1">Type a test card below, with any future expiry and any CVC:</p>
+                  <ul className="mt-2 grid sm:grid-cols-2 gap-1.5">
+                    {STRIPE_TEST_CARDS.map((t) => (
+                      <li key={t.number} className="px-2.5 py-1 rounded-lg bg-white border border-amber-200 font-mono text-xs text-amber-900">
+                        {t.number} <span className="font-sans text-amber-600">· {t.result}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {paymentConfig?.testMode && !stripeKey && (
                 <div className="mb-5 p-4 rounded-xl bg-amber-50 border border-amber-200 text-sm">
                   <p className="font-bold text-amber-800 flex items-center gap-2">
                     <I name="AlertTriangle" size={16} /> Test mode — no real money is charged
@@ -212,6 +254,11 @@ export default function Checkout() {
                 </div>
               )}
 
+              {!paymentConfig ? (
+                <p className="text-sm text-gray-500 py-6 text-center">Loading payment form…</p>
+              ) : stripeKey ? (
+                <StripeCardField publishableKey={stripeKey} ref={stripeCard} onChange={() => setPaymentError("")} />
+              ) : (
               <div className="space-y-4">
                 <Field label="Card number" error={cardErrors.number}>
                   <div className="relative">
@@ -262,6 +309,7 @@ export default function Checkout() {
                   />
                 </Field>
               </div>
+              )}
 
               <p className="mt-4 text-xs text-gray-500 flex items-center gap-1.5">
                 <I name="Shield" size={14} className="text-green-600" />
@@ -327,7 +375,7 @@ export default function Checkout() {
 
           <button
             type="submit"
-            disabled={isPaying}
+            disabled={isPaying || (!isFree && !paymentConfig)}
             className="mt-5 w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-60 disabled:cursor-wait text-white font-bold py-4 rounded-xl transition-all hover:shadow-lg hover:shadow-purple-500/30 active:scale-[0.98]"
           >
             <I name="Shield" size={18} />

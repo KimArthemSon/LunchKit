@@ -12,9 +12,14 @@ import orderRoutes from "./routes/orderRoutes";
 import sellerRoutes from "./routes/sellerRoutes";
 import { PREVIEW_DIR, PREVIEW_PUBLIC_PATH } from "./middleware/uploadMiddleware";
 import { initSocket } from "./realtime/socket";
+import { getPaymentProvider } from "./services/payments";
 
 dotenv.config();
 connectDB();
+
+// Validate payment settings at startup (e.g. missing or live Stripe keys) instead of at checkout
+const paymentProvider = getPaymentProvider();
+console.log(`Payments: ${paymentProvider.name}${paymentProvider.testMode ? " (test mode, no real money)" : ""}`);
 
 const app = express();
 

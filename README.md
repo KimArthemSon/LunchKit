@@ -160,6 +160,32 @@ Checkout uses the sandbox provider, so no real charges are made. Use any future 
 
 The checkout page also lists these cards, and clicking one fills it in for you.
 
+### Paying with Stripe (test mode)
+
+You can switch checkout to real [Stripe](https://stripe.com) **test mode**. Stripe processes the card, but test keys never move real money, and the server refuses live keys.
+
+1. In the Stripe dashboard, turn on **Test mode** and copy your keys from **Developers → API keys**.
+2. Add them to `server/.env` and restart the server:
+   ```env
+   PAYMENT_PROVIDER=stripe
+   STRIPE_SECRET_KEY=sk_test_...
+   STRIPE_PUBLISHABLE_KEY=pk_test_...
+   ```
+3. The server log shows `Payments: stripe (test mode, no real money)`. Checkout now shows Stripe's card field, and the cards above give the same results. Each payment appears under **Payments** in your Stripe test dashboard.
+
+Cards that need 3D Secure authentication (such as `4000 0025 0000 3155`) are declined with a message, because the checkout doesn't handle that step yet. Seller payouts stay simulated; they don't go through Stripe.
+
+### Test accounts
+
+For a clean run with no order history, run `npm run test-accounts` in `server/`. It creates two accounts with the password **`test1234`**:
+
+| Role | Email | What's set up |
+| --- | --- | --- |
+| Customer | `customer@launchkit.test` | Empty cart, no orders |
+| Seller | `seller@launchkit.test` | 3 active products and a payout account |
+
+Running it again resets both accounts. `npm run test-accounts -- --clear` removes them. It only touches `@launchkit.test` accounts, so it doesn't affect the seed data.
+
 ## How money works
 
 All amounts are stored in whole cents to avoid rounding errors.
@@ -191,6 +217,7 @@ All endpoints live under `/api`. Routes marked 🔒 need a signed-in user.
 | `server` | `npm run dev` | Start the API and restart it on file changes |
 | `server` | `npm run build` / `npm start` | Compile to JavaScript and run the compiled server |
 | `server` | `npm run seed` | Reset the demo data (`-- --clear` removes it, `-- --previews` redraws only the cover images) |
+| `server` | `npm run test-accounts` | Reset the two `@launchkit.test` accounts (`-- --clear` removes them) |
 | `client` | `npm run dev` | Start the app in development mode |
 | `client` | `npm run build` | Type-check and build for production into `client/dist` |
 | `client` | `npm run lint` | Run ESLint |

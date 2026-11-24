@@ -48,6 +48,15 @@ Card number            Result
 Use any future expiry date (e.g. 12 / 34) and any 3-digit security code (e.g. 123).
 
 
+TEST ACCOUNTS  (created by "npm run test-accounts" in server/, separate from the seed data)
+------------------------------------------------------------------------------------------
+Email                                Password    Name                 Set up with
+customer@launchkit.test              test1234    Test Customer        Empty cart, no orders
+seller@launchkit.test                test1234    Test Seller Studio   3 active products, GCash payout account
+Run it again to reset both; "npm run test-accounts -- --clear" removes them.
+With PAYMENT_PROVIDER=stripe, the same test cards above work in Stripe's card field.
+
+
 NOTES
 -----
 - Earnings stay "pending" for 7 days after each sale before sellers can withdraw them.
