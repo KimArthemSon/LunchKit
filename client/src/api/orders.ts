@@ -47,8 +47,9 @@ export interface LibraryItem {
 }
 
 export interface PaymentConfig {
-  provider: string;
+  provider: string; // "sandbox" | "stripe"
   testMode: boolean;
+  publishableKey?: string; // Stripe only
 }
 
 export interface CheckoutInput {
